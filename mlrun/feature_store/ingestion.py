@@ -246,6 +246,7 @@ def add_source_trigger(source, function):
             source.attributes["shards"],
         )
     if isinstance(source, KafkaSource):
+        partitions = source.attributes.get("partitions")
         func = function.add_trigger(
             "kafka",
             KafkaTrigger(
@@ -259,6 +260,9 @@ def add_source_trigger(source, function):
         sasl_pass = source.attributes.get("sasl_pass")
         if sasl_user and sasl_pass:
             func.sasl(sasl_user, sasl_pass)
+        replicas = 1 if not partitions else len(partitions)
+        func.spec.min_replicas = replicas
+        func.spec.max_replicas = replicas
     else:
         raise mlrun.errors.MLRunInvalidArgumentError(
             f"Source type {type(source)} is not supported with ingestion service yet"
