@@ -15,10 +15,12 @@
 import uuid
 
 import v3io
+from nuclio import KafkaTrigger
 
 import mlrun
 from mlrun.datastore.sources import (
     HttpSource,
+    KafkaSource,
     StreamSource,
     get_source_from_dict,
     get_source_step,
@@ -243,6 +245,20 @@ def add_source_trigger(source, function):
             source.attributes["seek_to"],
             source.attributes["shards"],
         )
+    if isinstance(source, KafkaSource):
+        func = function.add_trigger(
+            "kafka",
+            KafkaTrigger(
+                url=source.attributes["brokers"],
+                topic=source.attributes["topic"],
+                partitions=source.attributes.get("partitions"),
+            ),
+        )
+        func._struct["attributes"].update(source.attributes)
+        sasl_user = source.attributes.get("sasl_user")
+        sasl_pass = source.attributes.get("sasl_pass")
+        if sasl_user and sasl_pass:
+            func.sasl(sasl_user, sasl_pass)
     else:
         raise mlrun.errors.MLRunInvalidArgumentError(
             f"Source type {type(source)} is not supported with ingestion service yet"
