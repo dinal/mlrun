@@ -15,6 +15,7 @@ from storey import MapClass
 
 import mlrun
 import mlrun.feature_store as fs
+import tests.conftest
 from mlrun.data_types.data_types import ValueType
 from mlrun.datastore.sources import (
     CSVSource,
@@ -839,6 +840,22 @@ class TestFeatureStore(TestMLRunSystem):
         }
     )
 
+    def test_ingest_pandas_engine(self):
+        data = pd.DataFrame({"name": ["ab", "cd"], "data": [10, 20]})
+
+        data.set_index(["name"], inplace=True)
+        fset = fs.FeatureSet("pandass", entities=[fs.Entity("name")], engine="pandas")
+        fs.ingest(featureset=fset, source=data)
+
+        features = ["pandass.*"]
+        vector = fs.FeatureVector("my-vec", features)
+        svc = fs.get_online_feature_service(vector)
+
+        resp = svc.get([{"name": "ab"}])
+        assert resp[0] == {"data": 10}
+
+        svc.close()
+
     @pytest.mark.parametrize("partitioned", [True, False])
     def test_schedule_on_filtered_by_time(self, partitioned):
         name = f"sched-time-{str(partitioned)}"
@@ -1433,7 +1450,7 @@ class TestFeatureStore(TestMLRunSystem):
         fs.ingest(myset, quotes)
         source = StreamSource(key_field="ticker", time_field="time")
         filename = str(
-            pathlib.Path(__file__).parent.parent.parent
+            pathlib.Path(tests.conftest.tests_root_directory)
             / "api"
             / "runtimes"
             / "assets"
@@ -1470,6 +1487,7 @@ class TestFeatureStore(TestMLRunSystem):
         svc = fs.get_online_feature_service(vector)
         sleep(5)
         resp = svc.get([{"ticker": "AAPL"}])
+        svc.close()
         assert resp[0]["bid"] == 300
 
 
