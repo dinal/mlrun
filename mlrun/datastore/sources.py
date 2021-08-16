@@ -357,7 +357,7 @@ class KafkaSource(OnlineSource):
        :parameter brokers: A list of broker IP addresses
        :parameter topic: A list of topic(s) on which to listen.
        :parameter group: consumer group. Default "serving"
-       :parameter initialOffset: from where to consume the stream. Default earliest
+       :parameter initial_offset: from where to consume the stream. Default earliest
        :parameter partitions: Optional, A list of partitions numbers for which the function receives events.
        :parameter sasl_user: Optional, user name to use for sasl authentications
        :parameter sasl_pass: Optional, password to use for sasl authentications
@@ -371,7 +371,7 @@ class KafkaSource(OnlineSource):
         brokers,
         topic,
         group="serving",
-        initialOffset="earliest",
+        initial_offset="earliest",
         partitions=None,
         sasl_user=None,
         sasl_pass=None,
@@ -382,7 +382,7 @@ class KafkaSource(OnlineSource):
             "topic": topic,
             "partitions": partitions,
             "group": group,
-            "initialOffset": initialOffset,
+            "initial_offset": initial_offset,
         }
         if sasl_user and sasl_pass:
             attrs["sasl_user"] = sasl_user

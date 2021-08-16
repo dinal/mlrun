@@ -255,7 +255,8 @@ def add_source_trigger(source, function):
                 partitions=source.attributes.get("partitions"),
             ),
         )
-        func._struct["attributes"].update(source.attributes)
+        func.spec.config['spec.triggers.kafka']['attributes']["consumerGroup"] = source.attributes["group"]
+        func.spec.config['spec.triggers.kafka']['attributes']["initialOffset"] = source.attributes["initial_offset"]
         sasl_user = source.attributes.get("sasl_user")
         sasl_pass = source.attributes.get("sasl_pass")
         if sasl_user and sasl_pass:
