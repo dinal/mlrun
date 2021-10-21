@@ -87,6 +87,7 @@ class S3Store(DataStore):
         )
 
     def get(self, key, size=None, offset=0):
+        print("self.endpoint " + str(self.endpoint) + " self._join(key)[1:] " + self._join(key)[1:])
         obj = self.s3.Object(self.endpoint, self._join(key)[1:])
         if size or offset:
             return obj.get(Range=get_range(size, offset))["Body"].read()

@@ -497,7 +497,10 @@ class BaseStoreTarget(DataTargetBase):
         time_column=None,
     ):
         """return the target data as dataframe"""
-        return mlrun.get_dataitem(self._target_path).as_df(
+        path = self._target_path
+        if path.startswith("s3:///"):
+            path = self._target_path.replace("s3:///", "s3://")
+        return mlrun.get_dataitem(path).as_df(
             columns=columns,
             df_module=df_module,
             start_time=start_time,
@@ -737,7 +740,10 @@ class ParquetTarget(BaseStoreTarget):
         time_column=None,
     ):
         """return the target data as dataframe"""
-        return mlrun.get_dataitem(self._target_path).as_df(
+        path = self._target_path
+        if path.startswith("s3:///"):
+            path = self._target_path.replace("s3:///", "s3://")
+        return mlrun.get_dataitem(path).as_df(
             columns=columns,
             df_module=df_module,
             format="parquet",
