@@ -115,6 +115,9 @@ class S3Store(DataStore):
 
 def parse_s3_bucket_and_key(s3_path):
     try:
+        if s3_path.startswith("s3a:"):
+            # for spark paths
+            s3_path = s3_path.replace("s3a:", "s3:")
         path_parts = s3_path.replace("s3://", "").split("/")
         bucket = path_parts.pop(0)
         key = "/".join(path_parts)
