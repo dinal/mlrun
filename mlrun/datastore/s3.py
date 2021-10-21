@@ -87,7 +87,6 @@ class S3Store(DataStore):
         )
 
     def get(self, key, size=None, offset=0):
-        print("self.endpoint "+str(self.endpoint) + " self._join(key)[1:] "+self._join(key)[1:])
         obj = self.s3.Object(self.endpoint, self._join(key)[1:])
         if size or offset:
             return obj.get(Range=get_range(size, offset))["Body"].read()
@@ -116,11 +115,6 @@ class S3Store(DataStore):
 
 def parse_s3_bucket_and_key(s3_path):
     try:
-        print("s3_path1: "+s3_path)
-        if s3_path.startswith("s3a:"):
-            # for spark paths
-            s3_path = s3_path.replace("s3a:", "s3:")
-        print("s3_path2: " + s3_path)
         path_parts = s3_path.replace("s3://", "").split("/")
         bucket = path_parts.pop(0)
         key = "/".join(path_parts)

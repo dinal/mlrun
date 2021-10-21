@@ -160,7 +160,6 @@ class StoreManager:
 
     def get_or_create_store(self, url) -> (DataStore, str):
         schema, endpoint, parsed_url = parse_url(url)
-        print("url " + url+" schema "+str(schema)+" endpoint "+str(endpoint))
         subpath = parsed_url.path
 
         if schema == "memory":
