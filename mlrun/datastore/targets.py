@@ -489,6 +489,7 @@ class BaseStoreTarget(DataTargetBase):
         self.add_writer_step(graph, after, features, key_columns, timestamp_key)
 
     def purge(self):
+        print("purge "+str(self._target_path))
         self._get_store().rm(self._target_path, recursive=True)
 
     def as_df(
