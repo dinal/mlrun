@@ -307,6 +307,7 @@ class BaseStoreTarget(DataTargetBase):
         self._secrets = {}
 
     def _get_store(self):
+        print("_get_store" + str(self._target_path))
         store, _ = mlrun.store_manager.get_or_create_store(self._target_path)
         return store
 
@@ -705,7 +706,7 @@ class ParquetTarget(BaseStoreTarget):
 
     def get_spark_options(self, key_column=None, timestamp_key=None):
         partition_cols = []
-        if timestamp_key:
+        if timestamp_key and self.partitioned:
             print("here")
             time_partitioning_granularity = self.time_partitioning_granularity
             print("time_partitioning_granularity1 "+str(time_partitioning_granularity)+" self.partitioned "+str(self.partitioned))
