@@ -175,7 +175,7 @@ class StoreManager:
         store_key = f"{schema}://{endpoint}"
         if store_key in self._stores.keys():
             return self._stores[store_key], subpath
-
+        print("schema "+str(schema) + " store_key "+str(store_key)+" endpoint "+str(endpoint))
         store = schema_to_store(schema)(self, schema, store_key, endpoint)
         self._stores[store_key] = store
         return store, subpath

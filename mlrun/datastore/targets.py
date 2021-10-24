@@ -311,6 +311,7 @@ class BaseStoreTarget(DataTargetBase):
         self._secrets = {}
 
     def _get_store(self):
+        print("_get_store "+str(self._target_path))
         store, _ = mlrun.store_manager.get_or_create_store(self._target_path)
         return store
 
@@ -489,7 +490,6 @@ class BaseStoreTarget(DataTargetBase):
         self.add_writer_step(graph, after, features, key_columns, timestamp_key)
 
     def purge(self):
-        print("purge "+str(self._target_path))
         self._get_store().rm(self._target_path, recursive=True)
 
     def as_df(
