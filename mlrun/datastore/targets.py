@@ -706,7 +706,9 @@ class ParquetTarget(BaseStoreTarget):
     def get_spark_options(self, key_column=None, timestamp_key=None):
         partition_cols = []
         if timestamp_key:
+            print("here")
             time_partitioning_granularity = self.time_partitioning_granularity
+            print("time_partitioning_granularity1 "+str(time_partitioning_granularity)+" self.partitioned "+str(self.partitioned))
             if (
                 not time_partitioning_granularity
                 and self.partitioned
@@ -714,9 +716,11 @@ class ParquetTarget(BaseStoreTarget):
             ):
                 time_partitioning_granularity = "hour"
             for unit in self._legal_time_units:
+                print("in loop "+str(time_partitioning_granularity))
                 partition_cols.append(unit)
                 if unit == time_partitioning_granularity:
                     break
+        print("partition_cols "+str(partition_cols))
         result = {
             "path": store_path_to_spark(self._target_path),
             "format": "parquet",
@@ -724,6 +728,7 @@ class ParquetTarget(BaseStoreTarget):
         for partition_col in self.partition_cols or []:
             partition_cols.append(partition_col)
         if partition_cols:
+            print("partitionBy " + str(partition_cols))
             result["partitionBy"] = partition_cols
         return result
 
