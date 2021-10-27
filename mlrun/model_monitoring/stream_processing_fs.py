@@ -687,11 +687,11 @@ def handler(context, event):
         context.need_to_infer = False
 
     events = []
-    if "headers" in event and "values" in event:
-        for values in event["values"]:
-            events.append({k: v for k, v in zip(event["headers"], values)})
+    if "headers" in event.body and "values" in event.body:
+        for values in event.body["values"]:
+            events.append({k: v for k, v in zip(event.body["headers"], values)})
     else:
-        events.append(event)
+        events.append(event.body)
 
     for enriched in map(enrich_even_details, events):
         context.logger.info("enriched " + str(enriched))
