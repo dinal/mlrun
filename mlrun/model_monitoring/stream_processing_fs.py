@@ -677,8 +677,11 @@ def init_context(context):
 
 def handler(context, event):
     context.logger.debug(event.body)
+    context.logger.info("got event")
 
     options = fs.InferOptions.Null()
+    context.logger.info("context.need_to_infer "+str(context.need_to_infer))
+
     if context.need_to_infer:
         options = fs.InferOptions.default()
         context.need_to_infer = False
@@ -691,6 +694,8 @@ def handler(context, event):
         events.append(event)
 
     for enriched in map(enrich_even_details, events):
+        context.logger.info("enriched " + str(enriched))
+
         if enriched is not None:
             enriched[TIMESTAMP] = datetime.strptime(enriched["when"], ISO_8061_UTC)
             fs.ingest(context.fset, enriched, infer_options=options)
