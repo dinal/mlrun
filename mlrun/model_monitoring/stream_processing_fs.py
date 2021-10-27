@@ -679,7 +679,7 @@ def handler(context, event):
     context.logger.debug(event.body)
     context.logger.info("got event")
 
-    options = fs.InferOptions.Null()
+    options = fs.InferOptions.Null
     context.logger.info("context.need_to_infer "+str(context.need_to_infer))
 
     if context.need_to_infer:
