@@ -101,9 +101,9 @@ class EventStreamProcessor:
         self.tsdb_batching_timeout_secs = tsdb_batching_timeout_secs
         self.parquet_batching_max_events = parquet_batching_max_events
         self.parquet_batching_timeout_secs = parquet_batching_timeout_secs
-        self.aggregate_count_windows = aggregate_count_windows or ["5m", "1h"]
+        self.aggregate_count_windows = aggregate_count_windows or ["5m"]
         self.aggregate_count_period = aggregate_count_period
-        self.aggregate_avg_windows = aggregate_avg_windows or ["5m", "1h"]
+        self.aggregate_avg_windows = aggregate_avg_windows or ["5m"]
         self.aggregate_avg_period = aggregate_avg_period
 
         self.v3io_framesd = v3io_framesd or config.v3io_framesd
