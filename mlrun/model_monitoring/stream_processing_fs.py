@@ -163,7 +163,7 @@ class EventStreamProcessor:
         ]
 
     def create_feature_set(self):
-        feature_set = fs.FeatureSet("monitoring")
+        feature_set = fs.FeatureSet("monitoring", entities=[ENDPOINT_ID], timestamp_key=TIMESTAMP)
         feature_set.graph.to("ProcessEndpointEvent", kv_container=self.kv_container, kv_path=self.kv_path,
                              v3io_access_key=self.v3io_access_key)\
             .to("storey.Filter", "FilterNotNone", _fn="(event is not None)")\
@@ -665,16 +665,24 @@ def get_endpoint_record(
 
 
 def init_context(context):
-    context.logger.info("Initializing EventStreamProcessor11")
-    #parameters = environ.get("MODEL_MONITORING_PARAMETERS")
-    #parameters = json.loads(parameters) if parameters else {}
-    #stream_processor = EventStreamProcessor(**parameters)
-    #setattr(context, "stream_processor", stream_processor)
+    context.logger.info("Initializing EventStreamProcessor")
+    parameters = environ.get("MODEL_MONITORING_PARAMETERS")
+    parameters = json.loads(parameters) if parameters else {}
+    stream_processor = EventStreamProcessor(**parameters)
+    fset = stream_processor.create_feature_set()
+    setattr(context, "fset", fset)
+    setattr(context, "need_to_infer", True)
+
 
 
 def handler(context, event):
-    event_body = json.loads(event.body)
-    context.logger.debug(event_body)
+    context.logger.debug(event.body)
+
+    options = fs.InferOptions.Null()
+    if context.need_to_infer:
+        options = fs.InferOptions.default()
+        context.need_to_infer = False
+
     events = []
     if "headers" in event and "values" in event:
         for values in event["values"]:
@@ -684,6 +692,7 @@ def handler(context, event):
 
     for enriched in map(enrich_even_details, events):
         if enriched is not None:
-            context.mlrun_handler(context, enriched)
+            enriched[TIMESTAMP] = datetime.strptime(enriched["when"], ISO_8061_UTC)
+            fs.ingest(context.fset, enriched, infer_options=options)
         else:
             pass
