@@ -677,7 +677,7 @@ def init_context(context):
 
 def handler(context, event):
     context.logger.debug(event.body)
-    context.logger.info("got event")
+    event_body = json.loads(event.body)
 
     options = fs.InferOptions.Null
     context.logger.info("context.need_to_infer "+str(context.need_to_infer))
@@ -687,11 +687,11 @@ def handler(context, event):
         context.need_to_infer = False
 
     events = []
-    if "headers" in event.body and "values" in event.body:
-        for values in event.body["values"]:
-            events.append({k: v for k, v in zip(event.body["headers"], values)})
+    if "headers" in event_body and "values" in event_body:
+        for values in event_body["values"]:
+            events.append({k: v for k, v in zip(event_body["headers"], values)})
     else:
-        events.append(event.body)
+        events.append(event_body)
 
     for enriched in map(enrich_even_details, events):
         context.logger.info("enriched " + str(enriched))
