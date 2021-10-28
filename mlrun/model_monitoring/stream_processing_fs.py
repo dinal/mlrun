@@ -298,11 +298,7 @@ class ProcessEndpointEvent(MapClass):
         # Validate event fields
         model_class = event.get("model_class") or event.get("class")
         timestamp = event.get("when")
-        logger.info("event = " + str(event))
-        logger.info("event type = " + type(event))
         req = event.get("request", {})
-        logger.info("req = " + str(req))
-        logger.info("req type = " + type(req))
         request_id = event.get("request", {}).get("id")
         latency = event.get("microsec")
         features = event.get("request", {}).get("inputs")
@@ -333,6 +329,7 @@ class ProcessEndpointEvent(MapClass):
         # Separate each model invocation into sub events
         events = []
         for i, (feature, prediction) in enumerate(zip(features, predictions)):
+            logger.info("is valid, feature "+str(feature)+" ")
             if not self.is_valid(
                 endpoint_id,
                 self.is_list_of_numerics,
@@ -399,6 +396,7 @@ class ProcessEndpointEvent(MapClass):
     def is_valid(
         self, endpoint_id: str, validation_function, field: Any, dict_path: List[str]
     ):
+        logger.info("in func "+str(field)+" "+str(dict_path))
         if validation_function(field, dict_path):
             return True
         self.error_count[endpoint_id] += 1
@@ -692,6 +690,6 @@ def handler(context, event):
 
         if enriched is not None:
             enriched[TIMESTAMP] = datetime.strptime(enriched["when"], ISO_8061_UTC)
-            fs.ingest(context.fset, pd.DataFrame.from_dict(enriched), infer_options=options)
+            fs.ingest(context.fset, pd.DataFrame({k: [v] for k, v in enriched.items()}), infer_options=options)
         else:
             pass
