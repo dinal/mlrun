@@ -698,6 +698,6 @@ def handler(context, event):
 
         if enriched is not None:
             enriched[TIMESTAMP] = datetime.strptime(enriched["when"], ISO_8061_UTC)
-            fs.ingest(context.fset, enriched, infer_options=options)
+            fs.ingest(context.fset, pd.DataFrame.from_dict(enriched), infer_options=options)
         else:
             pass
