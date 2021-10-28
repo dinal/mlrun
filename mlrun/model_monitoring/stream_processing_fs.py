@@ -190,7 +190,7 @@ class EventStreamProcessor:
                                   max_events=self.parquet_batching_max_events,
                                   flush_after_seconds=self.parquet_batching_timeout_secs)
 
-        feature_set.set_targets(targets=[pq_target], with_defaults=False)
+        feature_set.set_targets(targets=[pq_target], with_defaults=False, default_final_step="ProcessBeforeParquet")
         return feature_set
 
 # mlrun: start-code
@@ -298,6 +298,11 @@ class ProcessEndpointEvent(MapClass):
         # Validate event fields
         model_class = event.get("model_class") or event.get("class")
         timestamp = event.get("when")
+        logger.info("event = " + str(event))
+        logger.info("event type = " + type(event))
+        req = event.get("request", {})
+        logger.info("req = " + str(req))
+        logger.info("req type = " + type(req))
         request_id = event.get("request", {}).get("id")
         latency = event.get("microsec")
         features = event.get("request", {}).get("inputs")
