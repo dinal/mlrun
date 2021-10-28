@@ -148,7 +148,6 @@ class EventStreamProcessor:
         feature_set = fs.FeatureSet("monitoring", entities=[ENDPOINT_ID], timestamp_key=TIMESTAMP)
         feature_set.graph.to("ProcessEndpointEvent", kv_container=self.kv_container, kv_path=self.kv_path,
                              v3io_access_key=self.v3io_access_key)\
-            .to("storey.Filter", "FilterNotNone", _fn="(event is not None)")\
             .to("MapFeatureNames", name="MapFeatureNames", kv_container=self.kv_container, kv_path=self.kv_path,
                 access_key=self.v3io_access_key, infer_columns_from_data=True)
         # kv and tsdb branch
@@ -329,12 +328,11 @@ class ProcessEndpointEvent(MapClass):
         # Separate each model invocation into sub events
         events = []
         for i, (feature, prediction) in enumerate(zip(features, predictions)):
-            logger.info("is valid, feature "+str(feature)+" ")
             if not self.is_valid(
                 endpoint_id,
                 self.is_list_of_numerics,
                 feature,
-                ["request", "inputs", f"[{i}]"],
+                ["request", "inputs", f"[{i}]"]
             ):
                 return None
 
@@ -363,9 +361,7 @@ class ProcessEndpointEvent(MapClass):
             )
         return events
 
-    def is_list_of_numerics(
-            field: List[Union[int, float, dict, list]], dict_path: List[str]
-    ):
+    def is_list_of_numerics(self, field: List[Union[int, float, dict, list]], dict_path: List[str]):
         if all(isinstance(x, int) or isinstance(x, float) for x in field):
             return True
         logger.error(
@@ -393,10 +389,7 @@ class ProcessEndpointEvent(MapClass):
                     self.error_count[endpoint_id] = error_count
             self.endpoints.add(endpoint_id)
 
-    def is_valid(
-        self, endpoint_id: str, validation_function, field: Any, dict_path: List[str]
-    ):
-        logger.info("in func "+str(field)+" "+str(dict_path))
+    def is_valid(self, endpoint_id: str, validation_function, field: Any, dict_path: List[str]):
         if validation_function(field, dict_path):
             return True
         self.error_count[endpoint_id] += 1
@@ -507,80 +500,82 @@ class MapFeatureNames(MapClass):
         return None
 
     def do(self, event: Dict):
-        endpoint_id = event[ENDPOINT_ID]
+        if event:
+            logger.info("event "+str(event))
+            endpoint_id = event[ENDPOINT_ID]
 
-        if endpoint_id not in self.feature_names:
-            endpoint_record = get_endpoint_record(
-                kv_container=self.kv_container,
-                kv_path=self.kv_path,
-                endpoint_id=endpoint_id,
-                access_key=self.access_key,
-            )
-            feature_names = endpoint_record.get(FEATURE_NAMES)
-            feature_names = json.loads(feature_names) if feature_names else None
-
-            label_columns = endpoint_record.get(LABEL_COLUMNS)
-            label_columns = json.loads(label_columns) if label_columns else None
-
-            if not feature_names and self._infer_columns_from_data:
-                feature_names = self._infer_feature_names_from_data(event)
-
-            if not feature_names:
-                logger.warn(
-                    "Feature names are not initialized, they will be automatically generated",
+            if endpoint_id not in self.feature_names:
+                endpoint_record = get_endpoint_record(
+                    kv_container=self.kv_container,
+                    kv_path=self.kv_path,
                     endpoint_id=endpoint_id,
-                )
-                feature_names = [f"f{i}" for i, _ in enumerate(event[FEATURES])]
-                get_v3io_client().kv.update(
-                    container=self.kv_container,
-                    table_path=self.kv_path,
                     access_key=self.access_key,
-                    key=event[ENDPOINT_ID],
-                    attributes={FEATURE_NAMES: json.dumps(feature_names)},
-                    raise_for_status=RaiseForStatus.always,
+                )
+                feature_names = endpoint_record.get(FEATURE_NAMES)
+                feature_names = json.loads(feature_names) if feature_names else None
+
+                label_columns = endpoint_record.get(LABEL_COLUMNS)
+                label_columns = json.loads(label_columns) if label_columns else None
+
+                if not feature_names and self._infer_columns_from_data:
+                    feature_names = self._infer_feature_names_from_data(event)
+
+                if not feature_names:
+                    logger.warn(
+                        "Feature names are not initialized, they will be automatically generated",
+                        endpoint_id=endpoint_id,
+                    )
+                    feature_names = [f"f{i}" for i, _ in enumerate(event[FEATURES])]
+                    get_v3io_client().kv.update(
+                        container=self.kv_container,
+                        table_path=self.kv_path,
+                        access_key=self.access_key,
+                        key=event[ENDPOINT_ID],
+                        attributes={FEATURE_NAMES: json.dumps(feature_names)},
+                        raise_for_status=RaiseForStatus.always,
+                    )
+
+                if not label_columns and self._infer_columns_from_data:
+                    label_columns = self._infer_label_columns_from_data(event)
+
+                if not label_columns:
+                    logger.warn(
+                        "label column names are not initialized, they will be automatically generated",
+                        endpoint_id=endpoint_id,
+                    )
+                    label_columns = [f"p{i}" for i, _ in enumerate(event[PREDICTION])]
+                    get_v3io_client().kv.update(
+                        container=self.kv_container,
+                        table_path=self.kv_path,
+                        access_key=self.access_key,
+                        key=event[ENDPOINT_ID],
+                        attributes={LABEL_COLUMNS: json.dumps(label_columns)},
+                        raise_for_status=RaiseForStatus.always,
+                    )
+
+                self.label_columns[endpoint_id] = label_columns
+                self.feature_names[endpoint_id] = feature_names
+
+                logger.info(
+                    "Label columns", endpoint_id=endpoint_id, label_columns=label_columns
+                )
+                logger.info(
+                    "Feature names", endpoint_id=endpoint_id, feature_names=feature_names
                 )
 
-            if not label_columns and self._infer_columns_from_data:
-                label_columns = self._infer_label_columns_from_data(event)
+            feature_names = self.feature_names[endpoint_id]
+            features = event[FEATURES]
+            event[NAMED_FEATURES] = {
+                name: feature for name, feature in zip(feature_names, features)
+            }
 
-            if not label_columns:
-                logger.warn(
-                    "label column names are not initialized, they will be automatically generated",
-                    endpoint_id=endpoint_id,
-                )
-                label_columns = [f"p{i}" for i, _ in enumerate(event[PREDICTION])]
-                get_v3io_client().kv.update(
-                    container=self.kv_container,
-                    table_path=self.kv_path,
-                    access_key=self.access_key,
-                    key=event[ENDPOINT_ID],
-                    attributes={LABEL_COLUMNS: json.dumps(label_columns)},
-                    raise_for_status=RaiseForStatus.always,
-                )
-
-            self.label_columns[endpoint_id] = label_columns
-            self.feature_names[endpoint_id] = feature_names
-
-            logger.info(
-                "Label columns", endpoint_id=endpoint_id, label_columns=label_columns
-            )
-            logger.info(
-                "Feature names", endpoint_id=endpoint_id, feature_names=feature_names
-            )
-
-        feature_names = self.feature_names[endpoint_id]
-        features = event[FEATURES]
-        event[NAMED_FEATURES] = {
-            name: feature for name, feature in zip(feature_names, features)
-        }
-
-        label_columns = self.label_columns[endpoint_id]
-        prediction = event[PREDICTION]
-        event[NAMED_PREDICTIONS] = {
-            name: prediction for name, prediction in zip(label_columns, prediction)
-        }
-        logger.info("Mapped event", event=event)
-        return event
+            label_columns = self.label_columns[endpoint_id]
+            prediction = event[PREDICTION]
+            event[NAMED_PREDICTIONS] = {
+                name: prediction for name, prediction in zip(label_columns, prediction)
+            }
+            logger.info("Mapped event", event=event)
+            return event
 
 
 class WriteToKV(MapClass):
