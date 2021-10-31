@@ -426,7 +426,7 @@ class ProcessEndpointEvent(MapClass):
 
         # Validate event fields
         model_class = event.get("model_class") or event.get("class")
-        logger.info("model_class "+str(model_class)+" event.get(model_class) "+str(event.get("model_class"))+ " event.get(class) "+str(event.get("class")))
+        logger.info("model_class "+str(model_class)+" event.get(model_class) "+str(event.get("model_class"))+ " event.get(class) "+str(event.get("class")) + " event "+str(event))
         timestamp = event.get("when")
         request_id = event.get("request", {}).get("id")
         latency = event.get("microsec")
