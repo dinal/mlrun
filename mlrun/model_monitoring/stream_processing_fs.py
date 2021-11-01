@@ -803,8 +803,6 @@ def handler(context, event):
     event_body = json.loads(event.body)
 
     options = fs.InferOptions.Null
-    context.logger.info("context.need_to_infer " + str(context.need_to_infer))
-
     if context.need_to_infer:
         options = fs.InferOptions.default()
         context.need_to_infer = False
@@ -821,6 +819,11 @@ def handler(context, event):
 
         if enriched is not None:
             enriched[TIMESTAMP] = datetime.strptime(enriched["when"], ISO_8061_UTC)
+            if enriched.get("class"):
+                # class is illegal column name in pandas df
+                enriched[MODEL_CLASS] = enriched['class']
+                del enriched['class']
+
             fs.ingest(
                 context.fset,
                 pd.DataFrame({k: [v] for k, v in enriched.items()}),
