@@ -582,6 +582,8 @@ class FilterKeys(MapClass):
         self.keys = list(args)
 
     def do(self, event):
+        logger.info("FilterKeys "+str(self.keys)+" event "+str(event))
+
         new_event = {}
         for key in self.keys:
             if key in event:
@@ -596,6 +598,7 @@ class UnpackValues(MapClass):
         self.keys_to_unpack = set(args)
 
     def do(self, event):
+        logger.info("UnpackValues "+str(self.keys_to_unpack)+" event "+str(event))
         unpacked = {}
         for key in event.keys():
             if key in self.keys_to_unpack:
