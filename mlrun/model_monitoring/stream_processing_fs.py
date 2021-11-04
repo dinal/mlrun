@@ -246,7 +246,7 @@ class EventStreamProcessor:
             "storey.Filter",
             "FilterNotNone1",
             after="FilterAndUnpackKeys3",
-            _fn="(event is not None)",
+            _fn="(event is not {})",
         )
         feature_set.graph.add_step(
             "storey.TSDBTarget",
@@ -371,6 +371,7 @@ class ProcessBeforeParquet(MapClass):
         super().__init__(**kwargs)
 
     def do(self, event):
+        logger.info("ProcessBeforeParquet event "+str(event))
         for key in [UNPACKED_LABELS, FEATURES]:
             event.pop(key, None)
         value = event.get("entities")
@@ -379,6 +380,7 @@ class ProcessBeforeParquet(MapClass):
         for key in [LABELS, METRICS, ENTITIES]:
             if not event.get(key):
                 event[key] = None
+        logger.info("ProcessBeforeParquet return " + str(event))
         return event
 
 
