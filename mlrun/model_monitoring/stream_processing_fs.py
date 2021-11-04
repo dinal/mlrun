@@ -237,7 +237,7 @@ class EventStreamProcessor:
             key=ENDPOINT_ID,
         )
         feature_set.graph.add_step(
-            "FilterKeys",
+            "FilterAndUnpackKeys",
             name="FilterAndUnpackKeys3",
             after="ProcessBeforeTSDB",
             keys=[CUSTOM_METRICS],
@@ -251,7 +251,7 @@ class EventStreamProcessor:
         feature_set.graph.add_step(
             "storey.TSDBTarget",
             name="tsdb3",
-            after="UnpackValues3",
+            after="FilterNotNone1",
             path=self.tsdb_path,
             rate="10/m",
             time_col=TIMESTAMP,
