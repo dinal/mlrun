@@ -7,9 +7,7 @@ from typing import Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
 import v3io
-from storey import (
-    Filter,
-)
+from storey import Filter
 
 # Constants
 from v3io.dataplane import RaiseForStatus
@@ -197,18 +195,15 @@ class EventStreamProcessor:
             "ProcessBeforeTSDB", name="ProcessBeforeTSDB", after="sample"
         )
         feature_set.graph.add_step(
-            "FilterKeys",
-            name="FilterKeys",
+            "FilterAndUnpackKeys",
+            name="FilterAndUnpackKeys1",
             after="ProcessBeforeTSDB",
-            args=[BASE_METRICS],
-        )
-        feature_set.graph.add_step(
-            "UnpackValues", name="UnpackValues", after="FilterKeys", args=[BASE_METRICS]
+            keys=[BASE_METRICS],
         )
         feature_set.graph.add_step(
             "storey.TSDBTarget",
             name="tsdb1",
-            after="UnpackValues",
+            after="FilterAndUnpackKeys1",
             path=self.tsdb_path,
             rate="10/m",
             time_col=TIMESTAMP,
@@ -221,21 +216,15 @@ class EventStreamProcessor:
             key=ENDPOINT_ID,
         )
         feature_set.graph.add_step(
-            "FilterKeys",
-            name="FilterKeys2",
+            "FilterAndUnpackKeys",
+            name="FilterAndUnpackKeys2",
             after="ProcessBeforeTSDB",
-            args=[ENDPOINT_FEATURES],
-        )
-        feature_set.graph.add_step(
-            "UnpackValues",
-            name="UnpackValues2",
-            after="FilterKeys2",
-            args=[ENDPOINT_FEATURES],
+            keys=[ENDPOINT_FEATURES],
         )
         feature_set.graph.add_step(
             "storey.TSDBTarget",
             name="tsdb2",
-            after="UnpackValues2",
+            after="FilterAndUnpackKeys2",
             path=self.tsdb_path,
             rate="10/m",
             time_col=TIMESTAMP,
@@ -249,21 +238,15 @@ class EventStreamProcessor:
         )
         feature_set.graph.add_step(
             "FilterKeys",
-            name="FilterKeys3",
+            name="FilterAndUnpackKeys3",
             after="ProcessBeforeTSDB",
-            args=[CUSTOM_METRICS],
+            keys=[CUSTOM_METRICS],
         )
         feature_set.graph.add_step(
             "storey.Filter",
             "FilterNotNone1",
-            after="FilterKeys3",
+            after="FilterAndUnpackKeys3",
             _fn="(event is not None)",
-        )
-        feature_set.graph.add_step(
-            "UnpackValues",
-            name="UnpackValues3",
-            after="FilterNotNone1",
-            args=[CUSTOM_METRICS],
         )
         feature_set.graph.add_step(
             "storey.TSDBTarget",
@@ -313,7 +296,6 @@ class ProcessBeforeKV(MapClass):
         # compute prediction per second
         event[PREDICTIONS_PER_SECOND] = float(event[PREDICTIONS_COUNT_5M]) / 600
         # Filter relevant keys
-        logger.info("new event "+str(event))
         e = {
             k: event[k]
             for k in [
@@ -426,7 +408,6 @@ class ProcessEndpointEvent(MapClass):
 
         # Validate event fields
         model_class = event.get("model_class") or event.get("class")
-        logger.info("model_class "+str(model_class)+" event.get(model_class) "+str(event.get("model_class"))+ " event.get(class) "+str(event.get("class")) + " event "+str(event))
         timestamp = event.get("when")
         request_id = event.get("request", {}).get("id")
         latency = event.get("microsec")
@@ -576,35 +557,25 @@ class FilterNotNone(Filter):
         super().__init__(fn=lambda event: event is not None, **kwargs)
 
 
-class FilterKeys(MapClass):
-    def __init__(self, *args, **kwargs):
+class FilterAndUnpackKeys(MapClass):
+    def __init__(self, keys, **kwargs):
         super().__init__(**kwargs)
-        self.keys = list(args)
+        self.keys = keys
 
     def do(self, event):
-        logger.info("FilterKeys "+str(self.keys)+" event "+str(event))
+        logger.info("FilterAndUnpackKeys " + str(self.keys) + " event " + str(event))
 
         new_event = {}
         for key in self.keys:
             if key in event:
                 new_event[key] = event[key]
-
-        return new_event if new_event else None
-
-
-class UnpackValues(MapClass):
-    def __init__(self, *args, **kwargs):
-        super().__init__(**kwargs)
-        self.keys_to_unpack = set(args)
-
-    def do(self, event):
-        logger.info("UnpackValues "+str(self.keys_to_unpack)+" event "+str(event))
         unpacked = {}
-        for key in event.keys():
-            if key in self.keys_to_unpack:
-                unpacked = {**unpacked, **event[key]}
+        for key in new_event.keys():
+            if key in self.keys:
+                unpacked = {**unpacked, **new_event[key]}
             else:
-                unpacked[key] = event[key]
+                unpacked[key] = new_event[key]
+        logger.info("FilterAndUnpackKeys return "+str(unpacked))
         return unpacked
 
 
@@ -824,8 +795,8 @@ def handler(context, event):
             enriched[TIMESTAMP] = datetime.strptime(enriched["when"], ISO_8061_UTC)
             if enriched.get("class"):
                 # class is illegal column name in pandas df
-                enriched[MODEL_CLASS] = enriched['class']
-                del enriched['class']
+                enriched[MODEL_CLASS] = enriched["class"]
+                del enriched["class"]
 
             fs.ingest(
                 context.fset,
