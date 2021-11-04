@@ -244,14 +244,14 @@ class EventStreamProcessor:
         )
         feature_set.graph.add_step(
             "storey.Filter",
-            "FilterNotNone1",
+            "FilterNotNone",
             after="FilterAndUnpackKeys3",
-            _fn="(event is not {})",
+            _fn="(event is not None)",
         )
         feature_set.graph.add_step(
             "storey.TSDBTarget",
             name="tsdb3",
-            after="FilterNotNone1",
+            after="FilterNotNone",
             path=self.tsdb_path,
             rate="10/m",
             time_col=TIMESTAMP,
@@ -553,12 +553,6 @@ def is_not_none(field: Any, dict_path: List[str]):
     )
     return False
 
-
-class FilterNotNone(Filter):
-    def __init__(self, **kwargs):
-        super().__init__(fn=lambda event: event is not None, **kwargs)
-
-
 class FilterAndUnpackKeys(MapClass):
     def __init__(self, keys, **kwargs):
         super().__init__(**kwargs)
@@ -578,7 +572,7 @@ class FilterAndUnpackKeys(MapClass):
             else:
                 unpacked[key] = new_event[key]
         logger.info("FilterAndUnpackKeys return "+str(unpacked))
-        return unpacked
+        return unpacked if unpacked else None
 
 
 class MapFeatureNames(MapClass):
