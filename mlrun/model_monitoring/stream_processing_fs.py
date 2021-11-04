@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
 import v3io
-from storey import Filter
 
 # Constants
 from v3io.dataplane import RaiseForStatus
@@ -371,7 +370,7 @@ class ProcessBeforeParquet(MapClass):
         super().__init__(**kwargs)
 
     def do(self, event):
-        logger.info("ProcessBeforeParquet event "+str(event))
+        logger.info("ProcessBeforeParquet event " + str(event))
         for key in [UNPACKED_LABELS, FEATURES]:
             event.pop(key, None)
         value = event.get("entities")
@@ -553,6 +552,7 @@ def is_not_none(field: Any, dict_path: List[str]):
     )
     return False
 
+
 class FilterAndUnpackKeys(MapClass):
     def __init__(self, keys, **kwargs):
         super().__init__(**kwargs)
@@ -571,7 +571,7 @@ class FilterAndUnpackKeys(MapClass):
                 unpacked = {**unpacked, **new_event[key]}
             else:
                 unpacked[key] = new_event[key]
-        logger.info("FilterAndUnpackKeys return "+str(unpacked))
+        logger.info("FilterAndUnpackKeys return " + str(unpacked))
         return unpacked if unpacked else None
 
 
