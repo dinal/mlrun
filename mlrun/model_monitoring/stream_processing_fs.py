@@ -276,6 +276,7 @@ class EventStreamProcessor:
             "v3io_access_key": self.model_monitoring_access_key,
         },
         print("access key " + str(self.model_monitoring_access_key))
+        os.environ["V3IO_ACCESS_KEY"] = self.model_monitoring_access_key
         store, _ = mlrun.store_manager.get_or_create_store(self.parquet_path)
 
         print("key "+str(store.get_storage_options()))
@@ -288,6 +289,7 @@ class EventStreamProcessor:
             max_events=self.parquet_batching_max_events,
             flush_after_seconds=self.parquet_batching_timeout_secs,
         )
+        os.environ["V3IO_ACCESS_KEY"] = self.v3io_access_key
 
         feature_set.set_targets(
             targets=[pq_target],
