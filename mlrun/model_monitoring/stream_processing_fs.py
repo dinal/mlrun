@@ -108,23 +108,17 @@ class EventStreamProcessor:
         )
         self.tsdb_path = f"{self.tsdb_container}/{self.tsdb_path}"
 
-        self.parquet_path = config.model_endpoint_monitoring.store_prefixes.user_space.format(
-            project=project, kind="parquet"
-        )
-
         logger.info(
             "Initializing model monitoring event stream processor",
             v3io_access_key=self.v3io_access_key,
             model_monitoring_access_key=self.model_monitoring_access_key,
             default_store_prefix=config.model_endpoint_monitoring.store_prefixes.default,
-            user_space_store_prefix=config.model_endpoint_monitoring.store_prefixes.user_space,
             v3io_api=self.v3io_api,
             v3io_framesd=self.v3io_framesd,
             kv_container=self.kv_container,
             kv_path=self.kv_path,
             tsdb_container=self.tsdb_container,
             tsdb_path=self.tsdb_path,
-            parquet_path=self.parquet_path,
         )
 
     def create_feature_set(self):
@@ -271,15 +265,10 @@ class EventStreamProcessor:
             after="MapFeatureNames",
             _fn="(event)",
         )
-        storage_options = {
-            "v3io_api": self.v3io_api,
-            "v3io_access_key": self.model_monitoring_access_key,
-        },
-        print("access key " + str(self.model_monitoring_access_key))
-        os.environ["V3IO_ACCESS_KEY"] = self.model_monitoring_access_key
-        store, _ = mlrun.store_manager.get_or_create_store(self.parquet_path)
-
-        print("key "+str(store.get_storage_options()))
+        storage_options = dict(
+            v3io_access_key=self.model_monitoring_access_key,
+            v3io_api=self.v3io_api
+        )
 
         pq_target = ParquetTarget(
             after_step="ProcessBeforeParquet",
@@ -287,8 +276,8 @@ class EventStreamProcessor:
             time_partitioning_granularity="hour",
             max_events=self.parquet_batching_max_events,
             flush_after_seconds=self.parquet_batching_timeout_secs,
+            storage_options=storage_options,
         )
-        os.environ["V3IO_ACCESS_KEY"] = self.v3io_access_key
 
         feature_set.set_targets(
             targets=[pq_target],

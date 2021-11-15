@@ -282,6 +282,7 @@ class BaseStoreTarget(DataTargetBase):
         after_state=None,
         max_events: typing.Optional[int] = None,
         flush_after_seconds: typing.Optional[int] = None,
+        storage_options: typing.Dict[str, str] = None,
     ):
         if after_state:
             warnings.warn(
@@ -302,6 +303,7 @@ class BaseStoreTarget(DataTargetBase):
         self.time_partitioning_granularity = time_partitioning_granularity
         self.max_events = max_events
         self.flush_after_seconds = flush_after_seconds
+        self.storage_options = storage_options
 
         self._target = None
         self._resource = None
@@ -560,6 +562,7 @@ class ParquetTarget(BaseStoreTarget):
         after_state=None,
         max_events: typing.Optional[int] = 10000,
         flush_after_seconds: typing.Optional[int] = 900,
+        storage_options: typing.Dict[str, str] = None,
     ):
         if after_state:
             warnings.warn(
@@ -594,6 +597,7 @@ class ParquetTarget(BaseStoreTarget):
             time_partitioning_granularity,
             max_events=max_events,
             flush_after_seconds=flush_after_seconds,
+            storage_options=storage_options,
         )
 
         if (
@@ -696,7 +700,7 @@ class ParquetTarget(BaseStoreTarget):
             columns=column_list,
             index_cols=tuple_key_columns,
             partition_cols=partition_cols,
-            storage_options=self._get_store().get_storage_options(),
+            storage_options=self.storage_options or self._get_store().get_storage_options(),
             max_events=self.max_events,
             flush_after_seconds=self.flush_after_seconds,
             **self.attributes,
