@@ -11,6 +11,7 @@ import v3io
 # Constants
 from v3io.dataplane import RaiseForStatus
 
+import mlrun
 import mlrun.feature_store as fs
 from mlrun.config import config
 from mlrun.datastore.targets import ParquetTarget
@@ -274,9 +275,12 @@ class EventStreamProcessor:
             "v3io_api": self.v3io_api,
             "v3io_access_key": self.model_monitoring_access_key,
         },
+        print("access key " + str(self.model_monitoring_access_key))
+        key = mlrun.store_manager.get_or_create_store(self.parquet_path).get_storage_options()
+        print("key "+str(key))
+
         pq_target = ParquetTarget(
             path=self.parquet_path,
-            attributes=dict("storage_options", storage_options),
             after_step="ProcessBeforeParquet",
             key_bucketing_number=0,
             time_partitioning_granularity="hour",
