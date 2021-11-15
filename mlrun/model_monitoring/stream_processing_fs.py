@@ -276,8 +276,9 @@ class EventStreamProcessor:
             "v3io_access_key": self.model_monitoring_access_key,
         },
         print("access key " + str(self.model_monitoring_access_key))
-        key = mlrun.store_manager.get_or_create_store(self.parquet_path).get_storage_options()
-        print("key "+str(key))
+        store, _ = mlrun.store_manager.get_or_create_store(self.parquet_path)
+
+        print("key "+str(store.get_storage_options()))
 
         pq_target = ParquetTarget(
             path=self.parquet_path,
