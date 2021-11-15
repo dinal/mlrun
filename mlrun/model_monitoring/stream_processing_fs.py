@@ -282,7 +282,6 @@ class EventStreamProcessor:
         print("key "+str(store.get_storage_options()))
 
         pq_target = ParquetTarget(
-            path=self.parquet_path,
             after_step="ProcessBeforeParquet",
             key_bucketing_number=0,
             time_partitioning_granularity="hour",
