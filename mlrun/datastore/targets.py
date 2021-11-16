@@ -692,13 +692,6 @@ class ParquetTarget(BaseStoreTarget):
                 "update_last_written": featureset_status.update_last_written_for_target
             }
 
-        print(
-            "storage_options 1 "
-            + str(self.storage_options)
-            + " 2 "
-            + str(self._get_store().get_storage_options())
-        )
-        print("path " + str(self._target_path))
         graph.add_step(
             name=self.name or "ParquetTarget",
             after=after,

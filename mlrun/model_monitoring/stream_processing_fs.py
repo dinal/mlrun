@@ -282,6 +282,7 @@ class EventStreamProcessor:
             max_events=self.parquet_batching_max_events,
             flush_after_seconds=self.parquet_batching_timeout_secs,
             storage_options=storage_options,
+            attributes={"infer_columns_from_data": True},
         )
 
         feature_set.set_targets(
