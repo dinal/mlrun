@@ -640,12 +640,15 @@ class ParquetTarget(BaseStoreTarget):
         timestamp_key=None,
         featureset_status=None,
     ):
-        column_list = self._get_column_list(
-            features=features,
-            timestamp_key=timestamp_key,
-            key_columns=None,
-            with_type=True,
-        )
+        if self.attributes.get("infer_columns_from_data"):
+            column_list = None
+        else:
+            column_list = self._get_column_list(
+                features=features,
+                timestamp_key=timestamp_key,
+                key_columns=None,
+                with_type=True,
+            )
 
         # need to extract types from features as part of column list
 
