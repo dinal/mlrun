@@ -692,8 +692,13 @@ class ParquetTarget(BaseStoreTarget):
                 "update_last_written": featureset_status.update_last_written_for_target
             }
 
-        print("storage_options 1 " + str(self.storage_options)+" 2 "+str(self._get_store().get_storage_options()))
-        print("path "+str(self._target_path))
+        print(
+            "storage_options 1 "
+            + str(self.storage_options)
+            + " 2 "
+            + str(self._get_store().get_storage_options())
+        )
+        print("path " + str(self._target_path))
         graph.add_step(
             name=self.name or "ParquetTarget",
             after=after,
@@ -703,7 +708,8 @@ class ParquetTarget(BaseStoreTarget):
             columns=column_list,
             index_cols=tuple_key_columns,
             partition_cols=partition_cols,
-            storage_options=self.storage_options or self._get_store().get_storage_options(),
+            storage_options=self.storage_options
+            or self._get_store().get_storage_options(),
             max_events=self.max_events,
             flush_after_seconds=self.flush_after_seconds,
             **self.attributes,

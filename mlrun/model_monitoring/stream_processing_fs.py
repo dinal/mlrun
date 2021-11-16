@@ -11,7 +11,6 @@ import v3io
 # Constants
 from v3io.dataplane import RaiseForStatus
 
-import mlrun
 import mlrun.feature_store as fs
 from mlrun.config import config
 from mlrun.datastore.targets import ParquetTarget
@@ -272,8 +271,7 @@ class EventStreamProcessor:
             _fn="(event)",
         )
         storage_options = dict(
-            v3io_access_key=self.model_monitoring_access_key,
-            v3io_api=self.v3io_api
+            v3io_access_key=self.model_monitoring_access_key, v3io_api=self.v3io_api
         )
 
         pq_target = ParquetTarget(
