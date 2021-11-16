@@ -439,6 +439,7 @@ class BaseStoreTarget(DataTargetBase):
         driver.time_partitioning_granularity = spec.time_partitioning_granularity
         driver.max_events = spec.max_events
         driver.flush_after_seconds = spec.flush_after_seconds
+        driver.storage_options = spec.storage_options
 
         driver._resource = resource
         return driver
