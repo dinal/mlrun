@@ -108,17 +108,23 @@ class EventStreamProcessor:
         )
         self.tsdb_path = f"{self.tsdb_container}/{self.tsdb_path}"
 
+        self.parquet_path = config.model_endpoint_monitoring.store_prefixes.user_space.format(
+            project=project, kind="parquet"
+        )
+
         logger.info(
             "Initializing model monitoring event stream processor",
             v3io_access_key=self.v3io_access_key,
             model_monitoring_access_key=self.model_monitoring_access_key,
             default_store_prefix=config.model_endpoint_monitoring.store_prefixes.default,
+            user_space_store_prefix=config.model_endpoint_monitoring.store_prefixes.user_space,
             v3io_api=self.v3io_api,
             v3io_framesd=self.v3io_framesd,
             kv_container=self.kv_container,
             kv_path=self.kv_path,
             tsdb_container=self.tsdb_container,
             tsdb_path=self.tsdb_path,
+            parquet_path=self.parquet_path,
         )
 
     def create_feature_set(self):
@@ -271,6 +277,7 @@ class EventStreamProcessor:
         )
 
         pq_target = ParquetTarget(
+            path=self.parquet_path,
             after_step="ProcessBeforeParquet",
             key_bucketing_number=0,
             time_partitioning_granularity="hour",
