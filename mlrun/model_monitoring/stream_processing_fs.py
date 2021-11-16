@@ -376,6 +376,7 @@ class ProcessBeforeParquet(MapClass):
         super().__init__(**kwargs)
 
     def do(self, event):
+        logger.info("ProcessBeforeParquet1", event=event)
         for key in [UNPACKED_LABELS, FEATURES]:
             event.pop(key, None)
         value = event.get("entities")
@@ -384,6 +385,7 @@ class ProcessBeforeParquet(MapClass):
         for key in [LABELS, METRICS, ENTITIES]:
             if not event.get(key):
                 event[key] = None
+        logger.info("ProcessBeforeParquet2", event=event)
         return event
 
 
@@ -680,6 +682,7 @@ class MapFeatureNames(MapClass):
         event[NAMED_PREDICTIONS] = {
             name: prediction for name, prediction in zip(label_columns, prediction)
         }
+        logger.info("Mapped event", event=event)
         return event
 
 
