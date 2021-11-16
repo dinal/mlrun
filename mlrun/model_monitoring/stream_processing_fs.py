@@ -270,6 +270,10 @@ class EventStreamProcessor:
             v3io_api=self.v3io_api
         )
 
+        print("monitoring access key " + str(self.model_monitoring_access_key)+" key "+str(self.v3io_access_key))
+        print("nginx " + str(self.v3io_api)+" env "+str(os.environ["V3IO_API"]))
+        os.environ["V3IO_ACCESS_KEY"] = self.model_monitoring_access_key
+
         pq_target = ParquetTarget(
             after_step="ProcessBeforeParquet",
             key_bucketing_number=0,
@@ -278,7 +282,7 @@ class EventStreamProcessor:
             flush_after_seconds=self.parquet_batching_timeout_secs,
             storage_options=storage_options,
         )
-
+        os.environ["V3IO_ACCESS_KEY"] = self.v3io_access_key
         feature_set.set_targets(
             targets=[pq_target],
             with_defaults=False,
