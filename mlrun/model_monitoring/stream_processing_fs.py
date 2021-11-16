@@ -793,6 +793,8 @@ def handler(context, event):
                 context.fset,
                 pd.DataFrame({k: [v] for k, v in enriched.items()}),
                 infer_options=options,
+                return_df=False,
+                overwrite=False,
             )
         else:
             pass
